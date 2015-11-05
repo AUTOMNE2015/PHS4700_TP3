@@ -78,7 +78,7 @@ function y = FrottementAir()
 end
 
 function y = Epsilon()
-    y = 0.5
+    y = 0.5;
 end
 
 %wboitei vitesse angulaire initiale de la boˆ?te.
@@ -97,7 +97,7 @@ function y = Devoir3(wboitei,vballei,tballe)
     
     i = 1; %nb iterations
     result = 0; %is there collision
-    while( i < 10 && result == 0 )
+    while( i < 20 && result == 0 )
         if(qSolBoite(i,1) >= tballe)
             % Calculer la balle avec precision et imposer son Deltat a la
             % boite
@@ -105,7 +105,7 @@ function y = Devoir3(wboitei,vballei,tballe)
             qSolBoite(i+1,:) = SEDRK4cImprecis(qSolBoite(i,2:7), qSolBoite(i,1), qSolBalle(i+1, 8), 0.25, @fonctionGboite);
         else
             % Calculer boite seulement, la balle ne bouge pas au debut
-            qSolBoite(i+1,:) = SEDRK4c(qSolBoite(i,2:7), qSolBoite(i,1), deltaT, 0.25, @fonctionGboite);
+            qSolBoite(i+1,:) = SEDRK4cImprecis(qSolBoite(i,2:7), qSolBoite(i,1), deltaT, 0.25, @fonctionGboite);
             qSolBalle(i+1,:) = [qSolBoite(i+1,1) vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3) deltaT];
         end 
         i = i + 1;
@@ -127,20 +127,21 @@ function y = Devoir3(wboitei,vballei,tballe)
     ti = qSolBalle(:,1);
     tc = 0;
     qfinal = {result-1 vbaf vbof rba rbo tc};
+    y = qfinal;
 %     qfinal(2) = {vbaf};
 %     qfinal(3) = {vbof};
 %     qfinal(4) = {rba};
 %     qfinal(5) = {rbo};
 %     qfinal(6) = {tc};
-    
-    %qfinal = [result-1 vbaf vbof rba rbo tc];
-    y = qfinal; 
+%     
+%     qfinal = [result-1 vbaf vbof rba rbo tc];
+
 end
 
 function y = CollisionDetect()
     y = 0;
 end
-function [t2 qs1 qs2 qs3 qs4 qs5 qs6]= SEDRK4cImprecis (q0 ,t0 ,Deltat ,Err , fonctiong )
+function y = SEDRK4cImprecis (q0 ,t0 ,Deltat ,Err , fonctiong )
     % Solution ED dq/dt= fonctiong (q)
     % Methode de Runge - Kutta d’ ordre 4
     % Contrôle d’ erreur et interpolation Richardson
@@ -154,15 +155,10 @@ function [t2 qs1 qs2 qs3 qs4 qs5 qs6]= SEDRK4cImprecis (q0 ,t0 ,Deltat ,Err , fo
     % Solution sur intervalle complet
     qs= SEDRK4t0 (q0 ,t0 ,Deltat , fonctiong );
     t2 = t0+ Deltat;
-    qs1 = qs(1);
-    qs2 = qs(2);
-    qs3 = qs(3);
-    qs4 = qs(4);
-    qs5 = qs(5);
-    qs6 = qs(6);
+    y = [t2 qs(1) qs(2) qs(3) qs(4) qs(5) qs(6)];
     
 end
-function [t2 qs1 qs2 qs3 qs4 qs5 qs6 Deltat2]= SEDRK4c (q0 ,t0 ,Deltat ,Err , fonctiong )
+function y= SEDRK4c (q0 ,t0 ,Deltat ,Err , fonctiong )
     % Solution ED dq/dt= fonctiong (q)
     % Methode de Runge - Kutta d’ ordre 4
     % Contrôle d’ erreur et interpolation Richardson
@@ -206,12 +202,7 @@ function [t2 qs1 qs2 qs3 qs4 qs5 qs6 Deltat2]= SEDRK4c (q0 ,t0 ,Deltat ,Err , fo
             break ;
         end
     end
-    qs1 = qs(1);
-    qs2 = qs(2);
-    qs3 = qs(3);
-    qs4 = qs(4);
-    qs5 = qs(5);
-    qs6 = qs(6);
+    y = [t2 qs(1) qs(2) qs(3) qs(4) qs(5) qs(6) Deltat2];
     
 end
 
@@ -226,25 +217,33 @@ function qs= SEDRK4t0 (q0 ,t0 ,Deltat , fonctiong )
 % Ceci est un m- file de matlab
 % qui retourne [dq/dt(ti )]
 %
-    k1= fonctiong (q0 )* Deltat ;
-    k2= fonctiong (q0+k1 /2)* Deltat ;
-    k3= fonctiong (q0+k2 /2)* Deltat ;
-    k4=  fonctiong (q0+k3)* Deltat ;
-    qs=q0 +( k1 +2* k2 +2* k3+k4 )/6;
+%     k1= fonctiong (q0 )* Deltat ;
+%     k2= fonctiong (q0+k1 /2)* Deltat ;
+%     k3= fonctiong (q0+k2 /2)* Deltat ;
+%     k4=  fonctiong (q0+k3)* Deltat ;
+%     qs=q0 +( k1 +2* k2 +2* k3+k4 )/6;
+fprintf('q0 avant calcul:\n');
+fprintf(mat2str(q0));
+qs = q0 + fonctiong (q0 )* Deltat;
+fprintf('\nqs apres calcul:\n');
+fprintf(mat2str(qs));
 end
 
 function y = fonctionGballe(q0)
-    ax = -FrottementAir()*AireBalle()*q0(1);
-    ay = -FrottementAir()*AireBalle()*q0(2);
-    az = -FrottementAir()*AireBalle()*q0(3) - 9.8;
+    ax = -FrottementAir()*AireBalle()*q0(1)/MasseBalle();
+    ay = -FrottementAir()*AireBalle()*q0(2)/MasseBalle();
+    az = -FrottementAir()*AireBalle()*q0(3)/MasseBalle()  - 9.8;
     y = [ax ay az q0(1) q0(2) q0(3)];
 end
 
 function y = fonctionGboite(q0)
-    ax = -FrottementAir()*AireBoite()*q0(1);
-    ay = -FrottementAir()*AireBoite()*q0(2);
-    az = -FrottementAir()*AireBoite()*q0(3) - 9.8;
+    ax = -FrottementAir()*AireBoite()*q0(1)/MasseBoite();
+    ay = -FrottementAir()*AireBoite()*q0(2)/MasseBoite();
+    az = -FrottementAir()*AireBoite()*q0(3)/MasseBoite()  - 9.8;
+    fprintf('fonctionGBoite\n');
+    
     y = [ax ay az q0(1) q0(2) q0(3)];
+    %printf(mat2str(y));
 end
 
 
@@ -279,11 +278,4 @@ function qs= SEDEuler (q0 ,Deltat , fonctiong )
     end
 end
 
-function y = fonctionG(q0, t0)
-    norme = norm([q0(2) q0(3) q0(4)]);
-    ax = -(((pi*db()*db())/8)*pAir()*Cv()*norme*q0(2))/mb();
-    ay = -(((pi*db()*db())/8)*pAir()*Cv()*norme*q0(3))/mb();
-    az = -(((pi*db()*db())/8)*pAir()*Cv()*norme*q0(4))/mb() - 9.8;
-    y = [0 ax ay az q0(2) q0(3) q0(4)];
-end
 
