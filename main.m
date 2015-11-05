@@ -3,6 +3,10 @@ function main
     fprintf('start\n');
     sol = zeros(8);
     sol = Devoir3([0 0 0]);
+    x1 = sol(:, 5);
+    y1 = sol(:, 6);
+    z1 = sol(:, 7);
+    scatter3(x1,y1,z1);
    % option 1
    
    % option 1 end
@@ -67,40 +71,85 @@ function y = Epsilon()
     y = 0.5
 end
 
-
-
-function y = Devoir3(vi)
+%wboitei vitesse angulaire initiale de la boˆ?te.
+% vballei vitesse initiale du centre de masse de la balle.
+% tballe temps tl ou la balle est lanc´ee.
+% [Dev vbaf vbof rba rbo tc]=Devoir3(wboitei,vballei,tballe)
+function y = Devoir3(wboitei,vballei,tballe)
     deltaT = dt();
     qSol = zeros(8);
     posBalle = Pos0Balle();
     posBoite = Pos0Boite();
-    qSolBalle(1,:) = [0 vi(1) vi(2) vi(3) posBalle(1) posBalle(2) posBalle(3)];
+    
+    qSolBalle(1,:) = [0 vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3)];
     qSolBoite(1,:) = [0 0 0 0 posBoite(1) posBoite(2) posBoite(3)];
+    
     i = 1; %nb iterations
     result = 0; %is there collision
-    while( i == 5 || result == 0 )
-        qSolBalle(i+1,:) = SEDRK4c(qSolBalle(i,2:7), qSolBalle(i,1),  deltaT, 0.25, @fonctionGballe);
-        qSolBoite(i+1,:) = SEDRK4c(qSolBoite(i,2:7), qSolBoite(i,1), deltaT, 0.25, @fonctionGballe);
+    while( i == 100 || result == 0 )
+        if(qSolBoite(i+1,1) >= tballe)
+            % Calculer la balle avec precision et imposer son Deltat a la
+            % boite
+            qSolBalle(i+1,:) = SEDRK4c(qSolBalle(i,2:7), qSolBalle(i,1),  deltaT, 0.25, @fonctionGballe);
+            qSolBoite(i+1,:) = SEDRK4cImprecis(qSolBoite(i,2:7), qSolBoite(i,1), qSolBalle(i+1, 8), 0.25, @fonctionGboite);
+        else
+            % Calculer boite seulement, la balle ne bouge pas au debut
+            qSolBoite(i+1,:) = SEDRK4c(qSolBoite(i,2:7), qSolBoite(i,1), deltaT, 0.25, @fonctionGboite);
+            qSolBalle(i+1,:) = [qSolBoite(i+1,1) vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3)];
+        end 
         i = i + 1;
-    result = CollisionDetect();
+        result = CollisionDetect();
     end
+    
     %qsol(1) est le temps
-    % result-1 = 0 si sol, sinon = 1 si prise
-    qfinal = zeros(8);
+    % result-1 = 0 si sol, sinon = 1 si collision
+    if(result-1 == 1)
+        %calcul vitesse finaux apres collision
+    end
+    
+    qfinal = zeros(6);
     d = size(qSol);
     i = 1;
-    while(i <= d(1))
-        qfinal(i,:) = [result-1 qSol(i,2) qSol(i,3) qSol(i,4) qSol(i,5) qSol(i,6) qSol(i,7) qSol(i,1)];
-        i = i+1;
-    end
-    y = qfinal; %[result-1 qSol(:,2) qSol(:,3) qSol(:,4) qSol(:,5) qSol(:,6) qSol(:,7) qSol(:,1)];
+    vbaf(1:2) = zeros(6);
+    vbof(1:2) = zeros(6);
+    rba = zeros(3);
+    rba = qSolBalle(:,5:7);
+    rbo = zeros(3);
+    rbo = qSolBoite(:,5:7);
+    ti = qSolBalle(:,1);
+    tc = 0;
+    
+    
+    qfinal = [result-1 vbaf vbof rba rbo tc];
+    y = qfinal; 
 end
 
 function y = CollisionDetect()
-    y = 1;
+    y = 0;
 end
+function [t2 qs1 qs2 qs3 qs4 qs5 qs6]= SEDRK4cImprecis (q0 ,t0 ,Deltat ,Err , fonctiong )
+    % Solution ED dq/dt= fonctiong (q)
+    % Methode de Runge - Kutta d’ ordre 4
+    % Contrôle d’ erreur et interpolation Richardson
+    % qs : vecteur final (v,r)
+    % q0 : vecteur initial (v,r)
+    % Deltat : intervalle de temps
+    % Err : Precision requise ( erreur relative )
+    % fonctiong : membre de droite de ED.
+    % maxit : nombre maximum itérations
 
-function [qs1 qs2 qs3 qs4 qs5 qs6 count t2]= SEDRK4c (q0 ,t0 ,Deltat ,Err , fonctiong )
+    % Solution sur intervalle complet
+    qs= SEDRK4t0 (q0 ,t0 ,Deltat , fonctiong );
+    t2 = t0+ Deltat;
+    qs1 = qs(1);
+    qs2 = qs(2);
+    qs3 = qs(3);
+    qs4 = qs(4);
+    qs5 = qs(5);
+    qs6 = qs(6);
+    
+end
+function [t2 qs1 qs2 qs3 qs4 qs5 qs6 Deltat2]= SEDRK4c (q0 ,t0 ,Deltat ,Err , fonctiong )
     % Solution ED dq/dt= fonctiong (q)
     % Methode de Runge - Kutta d’ ordre 4
     % Contrôle d’ erreur et interpolation Richardson
