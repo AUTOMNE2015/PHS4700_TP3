@@ -2,11 +2,21 @@ function main
     hold on
     fprintf('start\n');
     sol = zeros(8);
-    sol = Devoir3([0 0 0]);
-    x1 = sol(:, 5);
-    y1 = sol(:, 6);
-    z1 = sol(:, 7);
+    sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66 );
+    celldisp(sol)
+    pointsBalle = sol{4};
+    
+    
+    x1 = pointsBalle(:, 1);
+    y1 = pointsBalle(:, 2);
+    z1 = pointsBalle(:, 3);
     scatter3(x1,y1,z1);
+
+    pointsBoite = sol{5};
+    x2 = pointsBoite(:, 1);
+    y2 = pointsBoite(:, 2);
+    z2 = pointsBoite(:, 3);
+    scatter3(x2,y2,z2);
    % option 1
    
    % option 1 end
@@ -77,17 +87,18 @@ end
 % [Dev vbaf vbof rba rbo tc]=Devoir3(wboitei,vballei,tballe)
 function y = Devoir3(wboitei,vballei,tballe)
     deltaT = dt();
-    qSol = zeros(8);
+    qSolBalle = zeros(8);
+    qSolBoite = zeros(7);
     posBalle = Pos0Balle();
     posBoite = Pos0Boite();
     
-    qSolBalle(1,:) = [0 vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3)];
+    qSolBalle(1,:) = [0 vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3) 0];
     qSolBoite(1,:) = [0 0 0 0 posBoite(1) posBoite(2) posBoite(3)];
     
     i = 1; %nb iterations
     result = 0; %is there collision
-    while( i == 100 || result == 0 )
-        if(qSolBoite(i+1,1) >= tballe)
+    while( i < 10 && result == 0 )
+        if(qSolBoite(i,1) >= tballe)
             % Calculer la balle avec precision et imposer son Deltat a la
             % boite
             qSolBalle(i+1,:) = SEDRK4c(qSolBalle(i,2:7), qSolBalle(i,1),  deltaT, 0.25, @fonctionGballe);
@@ -95,7 +106,7 @@ function y = Devoir3(wboitei,vballei,tballe)
         else
             % Calculer boite seulement, la balle ne bouge pas au debut
             qSolBoite(i+1,:) = SEDRK4c(qSolBoite(i,2:7), qSolBoite(i,1), deltaT, 0.25, @fonctionGboite);
-            qSolBalle(i+1,:) = [qSolBoite(i+1,1) vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3)];
+            qSolBalle(i+1,:) = [qSolBoite(i+1,1) vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3) deltaT];
         end 
         i = i + 1;
         result = CollisionDetect();
@@ -107,20 +118,22 @@ function y = Devoir3(wboitei,vballei,tballe)
         %calcul vitesse finaux apres collision
     end
     
-    qfinal = zeros(6);
-    d = size(qSol);
-    i = 1;
-    vbaf(1:2) = zeros(6);
-    vbof(1:2) = zeros(6);
-    rba = zeros(3);
+    %qfinal = [ 0 0 0 0 0 0];
+   % qfinal = cell(1,6);
+    vbaf = [0 0 0; 0 0 0];
+    vbof = [0 0 0; 0 0 0];
     rba = qSolBalle(:,5:7);
-    rbo = zeros(3);
     rbo = qSolBoite(:,5:7);
     ti = qSolBalle(:,1);
     tc = 0;
+    qfinal = {result-1 vbaf vbof rba rbo tc};
+%     qfinal(2) = {vbaf};
+%     qfinal(3) = {vbof};
+%     qfinal(4) = {rba};
+%     qfinal(5) = {rbo};
+%     qfinal(6) = {tc};
     
-    
-    qfinal = [result-1 vbaf vbof rba rbo tc];
+    %qfinal = [result-1 vbaf vbof rba rbo tc];
     y = qfinal; 
 end
 
