@@ -2,7 +2,48 @@ function main
     hold on
     fprintf('start\n');
     sol = zeros(8);
-    sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66 );
+    
+    % option 1
+%     sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66);
+%     celldisp(sol)
+%     pointsBalle = sol{4};
+%     
+%     
+%     x1 = pointsBalle(:, 1);
+%     y1 = pointsBalle(:, 2);
+%     z1 = pointsBalle(:, 3);
+%     scatter3(x1,y1,z1);
+% 
+%     pointsBoite = sol{5};
+%     x2 = pointsBoite(:, 1);
+%     y2 = pointsBoite(:, 2);
+%     z2 = pointsBoite(:, 3);
+%     scatter3(x2,y2,z2);
+    
+
+   
+   % option 1 end
+
+   % option 2
+%     sol = Devoir3([0 2.3 0], [6.85, 0.0, 6.85], 0.66);
+%     celldisp(sol)
+%     pointsBalle = sol{4};
+%     
+%     
+%     x1 = pointsBalle(:, 1);
+%     y1 = pointsBalle(:, 2);
+%     z1 = pointsBalle(:, 3);
+%     scatter3(x1,y1,z1);
+% 
+%     pointsBoite = sol{5};
+%     x2 = pointsBoite(:, 1);
+%     y2 = pointsBoite(:, 2);
+%     z2 = pointsBoite(:, 3);
+%     scatter3(x2,y2,z2);
+   % option 2 end
+
+   % option 3
+    sol = Devoir3([0 0 0], [28, 0.5, 10], 1.1);
     celldisp(sol)
     pointsBalle = sol{4};
     
@@ -17,22 +58,13 @@ function main
     y2 = pointsBoite(:, 2);
     z2 = pointsBoite(:, 3);
     scatter3(x2,y2,z2);
-   % option 1
-   
-   % option 1 end
-
-   % option 2
-   
-   % option 2 end
-
-   % option 3
-
    % option 3 end
 end
 
 function y = dt()
     y = 0.1;
 end
+
 
 function y = Pos0Balle()
     y = [0 0 2];
@@ -52,16 +84,40 @@ function y = AireBalle()
 end
 
 function y = AireBoite()
-    y = RayonBoite()*RayonBoite() + HauteurBoite()*HauteurBoite()
+    y = RayonMinBoite()*RayonMinBoite() + HauteurBoite()*HauteurBoite()
 end
 
+function y = PosRelativeCoinBoite()
+    r = RayonMinBoite()
+    h = HauteurBoite()
+    y = [0 r h/2;
+        r/sqrt(2) r/sqrt(2) h/2;
+        r 0 h/2;
+        r/sqrt(2) -r/sqrt(2) h/2;
+        0 -r h/2;
+        -r/sqrt(2) -r/sqrt(2) h/2;
+        -r 0 h/2;
+        -r/sqrt(2) r/sqrt(2) h/2;
+        0 r -h/2;
+        r/sqrt(2) r/sqrt(2) -h/2;
+        r 0 -h/2;
+        r/sqrt(2) -r/sqrt(2) -h/2;
+        0 -r -h/2;
+        -r/sqrt(2) r/sqrt(2) -h/2;
+        -r 0 -h/2;
+        -r/sqrt(2) -r/sqrt(2) -h/2];
+end
 
 function y = Pos0Boite()
     y = [3 0 10];
 end
 
-function y = RayonBoite()
+function y = RayonMinBoite()
     y = 0.05;
+end
+
+function y = RayonMaxBoite()
+    y = sqrt(HauteurBoite()*HauteurBoite()/4 + RayonMinBoite()*RayonMinBoite());
 end
 
 function y = HauteurBoite()
@@ -81,6 +137,10 @@ function y = Epsilon()
     y = 0.5;
 end
 
+function y = TauxErreur()
+    y = 0.1;
+end
+
 %wboitei vitesse angulaire initiale de la boˆ?te.
 % vballei vitesse initiale du centre de masse de la balle.
 % tballe temps tl ou la balle est lanc´ee.
@@ -97,19 +157,19 @@ function y = Devoir3(wboitei,vballei,tballe)
     
     i = 1; %nb iterations
     result = 0; %is there collision
-    while( i < 20 && result == 0 )
+    while( i < 100 && result == 0 )
         if(qSolBoite(i,1) >= tballe)
             % Calculer la balle avec precision et imposer son Deltat a la
             % boite
-            qSolBalle(i+1,:) = SEDRK4c(qSolBalle(i,2:7), qSolBalle(i,1),  deltaT, 0.25, @fonctionGballe);
-            qSolBoite(i+1,:) = SEDRK4cImprecis(qSolBoite(i,2:7), qSolBoite(i,1), qSolBalle(i+1, 8), 0.25, @fonctionGboite);
+            qSolBalle(i+1,:) = SEDRK4c(qSolBalle(i,2:7), qSolBalle(i,1),  deltaT, TauxErreur(), @fonctionGballe);
+            qSolBoite(i+1,:) = SEDRK4cImprecis(qSolBoite(i,2:7), qSolBoite(i,1), qSolBalle(i+1, 8), TauxErreur(), @fonctionGboite);
         else
             % Calculer boite seulement, la balle ne bouge pas au debut
-            qSolBoite(i+1,:) = SEDRK4cImprecis(qSolBoite(i,2:7), qSolBoite(i,1), deltaT, 0.25, @fonctionGboite);
+            qSolBoite(i+1,:) = SEDRK4cImprecis(qSolBoite(i,2:7), qSolBoite(i,1), deltaT, TauxErreur(), @fonctionGboite);
             qSolBalle(i+1,:) = [qSolBoite(i+1,1) vballei(1) vballei(2) vballei(3) posBalle(1) posBalle(2) posBalle(3) deltaT];
         end 
         i = i + 1;
-        result = CollisionDetect();
+        result = DetectionCollision(qSolBoite(i,5:7), qSolBalle(i,5:7),wboitei, qSolBalle(i, 1));
     end
     
     %qsol(1) est le temps
@@ -125,7 +185,7 @@ function y = Devoir3(wboitei,vballei,tballe)
     rba = qSolBalle(:,5:7);
     rbo = qSolBoite(:,5:7);
     ti = qSolBalle(:,1);
-    tc = 0;
+    tc = ti(size(ti));
     qfinal = {result-1 vbaf vbof rba rbo tc};
     y = qfinal;
 %     qfinal(2) = {vbaf};
@@ -138,9 +198,71 @@ function y = Devoir3(wboitei,vballei,tballe)
 
 end
 
-function y = CollisionDetect()
+function y = DetectionCollision(posBoite, posBalle, wboitei, temps)
+    %rayon balle (Constante)
+    %rayon boite max (distance coin j et centre de masse) (Constante)
+    %position balle (posBalle)
+    %position boite (posBoite)
+    
+    if(norm(posBoite-posBalle) > RayonBalle() + RayonMaxBoite())
+        if(posBalle(3) - RayonBalle() <= 0)
+            y = 1;
+        else
+            y = 0;
+        end
+        %0
+    else
+        y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps);  %(retourne 0 ou 2)
+    end
+    
+    %0 = pas de collision
+    %1 = collision sol
+    %2 = collision balle-boite
+end
+
+function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
+    %position des coins de la boite.
+    %plan de la boite : [i + 8, i + 1, i]. 8 plans + 2.
+    posCoinBoiteRotate = RotaterVecteur(wboitei, temps);
+    y=0;
+    
+    for i = 1:8
+       planCourant = [posCoinBoiteRotate(i + 8) posCoinBoiteRotate(i + 1) posCoinBoiteRotate(i)];
+       vecteurNormal = cross(planCourant(1),planCourant(2));
+       vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
+       distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(i + 8)+posBoite)));
+       if(distance > RayonBalle)
+           y = -2;
+           break;
+       end
+    end
+        
+
+    %0 = pas de collision
+    %2 - collision balle-boite
+    y = y + 2;
+end
+
+function y = RotaterVecteur(temps,wboitei)
+    angle = temps*wboitei;
+    quatRot = angle2quat(angle(1), angle(2), angle(3));
+    pointNonRotate = PosRelativeCoinBoite();
+    
+    posCoinBoiteRotate = quatrotate(quatRot, pointNonRotate);
+    
+    y = posCoinBoiteRotate;
+    
+    
+%     x2 = posCoinBoiteRotate(:, 1);
+%     y2 = posCoinBoiteRotate(:, 2);
+%     z2 = posCoinBoiteRotate(:, 3);
+%     scatter3(x2,y2,z2);
+end
+
+function y = CalculerCollision()
     y = 0;
 end
+
 function y = SEDRK4cImprecis (q0 ,t0 ,Deltat ,Err , fonctiong )
     % Solution ED dq/dt= fonctiong (q)
     % Methode de Runge - Kutta d’ ordre 4
@@ -202,7 +324,7 @@ function y= SEDRK4c (q0 ,t0 ,Deltat ,Err , fonctiong )
             break ;
         end
     end
-    y = [t2 qs(1) qs(2) qs(3) qs(4) qs(5) qs(6) Deltat2];
+    y = [t2 qs(1) qs(2) qs(3) qs(4) qs(5) qs(6) Deltat];
     
 end
 
