@@ -4,21 +4,21 @@ function main
     sol = zeros(8);
     
     % option 1
-%     sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66);
-%     celldisp(sol)
-%     pointsBalle = sol{4};
-%     
-%     
-%     x1 = pointsBalle(:, 1);
-%     y1 = pointsBalle(:, 2);
-%     z1 = pointsBalle(:, 3);
-%     scatter3(x1,y1,z1);
-% 
-%     pointsBoite = sol{5};
-%     x2 = pointsBoite(:, 1);
-%     y2 = pointsBoite(:, 2);
-%     z2 = pointsBoite(:, 3);
-%     scatter3(x2,y2,z2);
+    sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66);
+    celldisp(sol)
+    pointsBalle = sol{4};
+    
+    
+    x1 = pointsBalle(:, 1);
+    y1 = pointsBalle(:, 2);
+    z1 = pointsBalle(:, 3);
+    scatter3(x1,y1,z1);
+
+    pointsBoite = sol{5};
+    x2 = pointsBoite(:, 1);
+    y2 = pointsBoite(:, 2);
+    z2 = pointsBoite(:, 3);
+    scatter3(x2,y2,z2);
     
 
    
@@ -43,26 +43,43 @@ function main
    % option 2 end
 
    % option 3
-    sol = Devoir3([0 0 0], [28, 0.5, 10], 1.1);
-    celldisp(sol)
-    pointsBalle = sol{4};
-    
-    
-    x1 = pointsBalle(:, 1);
-    y1 = pointsBalle(:, 2);
-    z1 = pointsBalle(:, 3);
-    scatter3(x1,y1,z1);
-
-    pointsBoite = sol{5};
-    x2 = pointsBoite(:, 1);
-    y2 = pointsBoite(:, 2);
-    z2 = pointsBoite(:, 3);
-    scatter3(x2,y2,z2);
-   % option 3 end
+%     sol = Devoir3([0 0 0], [28, 0.5, 10], 1.1);
+%     celldisp(sol)
+%     pointsBalle = sol{4};
+%     
+%     
+%     x1 = pointsBalle(:, 1);
+%     y1 = pointsBalle(:, 2);
+%     z1 = pointsBalle(:, 3);
+%     scatter3(x1,y1,z1);
+% 
+%     pointsBoite = sol{5};
+%     x2 = pointsBoite(:, 1);
+%     y2 = pointsBoite(:, 2);
+%     z2 = pointsBoite(:, 3);
+%     scatter3(x2,y2,z2);
+%    option 3 end
+   
+   %option 4
+%     sol = Devoir3([0 2.3 0], [28, 0.5, 10], 1.1);
+%     celldisp(sol)
+%     pointsBalle = sol{4};
+%     
+%     
+%     x1 = pointsBalle(:, 1);
+%     y1 = pointsBalle(:, 2);
+%     z1 = pointsBalle(:, 3);
+%     scatter3(x1,y1,z1);
+% 
+%     pointsBoite = sol{5};
+%     x2 = pointsBoite(:, 1);
+%     y2 = pointsBoite(:, 2);
+%     z2 = pointsBoite(:, 3);
+%     scatter3
 end
 
 function y = dt()
-    y = 0.1;
+    y = 0.01;
 end
 
 
@@ -157,7 +174,7 @@ function y = Devoir3(wboitei,vballei,tballe)
     
     i = 1; %nb iterations
     result = 0; %is there collision
-    while( i < 100 && result == 0 )
+    while( i < 200 && result == 0 )
         if(qSolBoite(i,1) >= tballe)
             % Calculer la balle avec precision et imposer son Deltat a la
             % boite
@@ -224,13 +241,32 @@ function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
     %position des coins de la boite.
     %plan de la boite : [i + 8, i + 1, i]. 8 plans + 2.
     posCoinBoiteRotate = RotaterVecteur(wboitei, temps);
-    y=0;
     
+    y=0;
+    %face du haut
+    planCourant = [posCoinBoiteRotate(1,:); posCoinBoiteRotate(2,:); posCoinBoiteRotate(3,:)];
+    vecteurNormal = cross(planCourant(1,:),planCourant(2,:));
+    vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
+    distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(1,:)+posBoite)));
+    if(distance > RayonBalle)
+        y = -2;
+    end
+    
+    %face du bas
+    planCourant = [posCoinBoiteRotate(9,:); posCoinBoiteRotate(10,:); posCoinBoiteRotate(11,:)];
+    vecteurNormal = cross(planCourant(1,:),planCourant(2,:));
+    vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
+    distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(11,:)+posBoite)));
+    if(distance > RayonBalle)
+        y = -2;
+    end
+       
     for i = 1:8
-       planCourant = [posCoinBoiteRotate(i + 8) posCoinBoiteRotate(i + 1) posCoinBoiteRotate(i)];
-       vecteurNormal = cross(planCourant(1),planCourant(2));
+       planCourant = [posCoinBoiteRotate(i + 8,:); posCoinBoiteRotate(i + 1,:); posCoinBoiteRotate(i,:)];
+       fprintf('%s', mat2str(planCourant));
+       vecteurNormal = cross(planCourant(1,:),planCourant(2,:));
        vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
-       distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(i + 8)+posBoite)));
+       distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(i + 8,:)+posBoite)));
        if(distance > RayonBalle)
            y = -2;
            break;
@@ -367,37 +403,4 @@ function y = fonctionGboite(q0)
     y = [ax ay az q0(1) q0(2) q0(3)];
     %printf(mat2str(y));
 end
-
-
-function qs= SEDEuler (q0 ,Deltat , fonctiong )
-    % Solution ED dq/dt= fonctiong (q,t)
-    % Methode de Euler
-    % qs : vecteur final [tf q(tf )]
-    % q0 : vecteur initial [ti q(ti )]
-    % Deltat : intervalle de temps
-    % fonctiong : membre de droite de ED.
-    % Ceci est un m- file de matlab
-    % qui retourne [1 dq/dt(ti )]
-    qs=q0+ fonctiong* Deltat + [Deltat 0 0 0 0 0 0];
-    maxIt = 100;
-    nbIt = 1;
-    % Extrapolation de Richardson
-    while (nbIt < maxIt)
-        % Calculer avec plus de precision
-        nbIt = nbIt*2;
-        DeltatPetit = Deltat/nbIt;
-        q2=q0+ fonctiong* DeltatPetit + [DeltatPetit 0 0 0 0 0 0];
-        % Determiner le taux d'erreur
-        avgsol=(q2+qs)/2.;
-        ErrSol=(q2-qs);
-        MaxErr=max(abs(ErrSol./avgsol));
-        qs = q2;
-        % Si le taux d'erreur est acceptable, quitter la boucle
-        if(MaxErr < 0.05)
-            qs = qs + ErrSol/15.;
-            break;
-        end
-    end
-end
-
 
