@@ -4,22 +4,22 @@ function main
     sol = zeros(8);
     
     % option 1
-    sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66);
-    celldisp(sol)
-    pointsBalle = sol{4};
-    
-    
-    x1 = pointsBalle(:, 1);
-    y1 = pointsBalle(:, 2);
-    z1 = pointsBalle(:, 3);
-    scatter3(x1,y1,z1);
-
-    pointsBoite = sol{5};
-    x2 = pointsBoite(:, 1);
-    y2 = pointsBoite(:, 2);
-    z2 = pointsBoite(:, 3);
-    scatter3(x2,y2,z2);
-    
+%     sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66);
+%     celldisp(sol)
+%     pointsBalle = sol{4};
+%     
+%     
+%     x1 = pointsBalle(:, 1);
+%     y1 = pointsBalle(:, 2);
+%     z1 = pointsBalle(:, 3);
+%     scatter3(x1,y1,z1);
+% 
+%     pointsBoite = sol{5};
+%     x2 = pointsBoite(:, 1);
+%     y2 = pointsBoite(:, 2);
+%     z2 = pointsBoite(:, 3);
+%     scatter3(x2,y2,z2);
+%     
 
    
    % option 1 end
@@ -43,21 +43,21 @@ function main
    % option 2 end
 
    % option 3
-%     sol = Devoir3([0 0 0], [28, 0.5, 10], 1.1);
-%     celldisp(sol)
-%     pointsBalle = sol{4};
-%     
-%     
-%     x1 = pointsBalle(:, 1);
-%     y1 = pointsBalle(:, 2);
-%     z1 = pointsBalle(:, 3);
-%     scatter3(x1,y1,z1);
-% 
-%     pointsBoite = sol{5};
-%     x2 = pointsBoite(:, 1);
-%     y2 = pointsBoite(:, 2);
-%     z2 = pointsBoite(:, 3);
-%     scatter3(x2,y2,z2);
+    sol = Devoir3([0 0 0], [28, 0.5, 10], 1.1);
+    celldisp(sol)
+    pointsBalle = sol{4};
+    
+    
+    x1 = pointsBalle(:, 1);
+    y1 = pointsBalle(:, 2);
+    z1 = pointsBalle(:, 3);
+    scatter3(x1,y1,z1);
+
+    pointsBoite = sol{5};
+    x2 = pointsBoite(:, 1);
+    y2 = pointsBoite(:, 2);
+    z2 = pointsBoite(:, 3);
+    scatter3(x2,y2,z2);
 %    option 3 end
    
    %option 4
@@ -120,9 +120,9 @@ function y = PosRelativeCoinBoite()
         r 0 -h/2;
         r/sqrt(2) -r/sqrt(2) -h/2;
         0 -r -h/2;
-        -r/sqrt(2) r/sqrt(2) -h/2;
+        -r/sqrt(2) -r/sqrt(2) -h/2;
         -r 0 -h/2;
-        -r/sqrt(2) -r/sqrt(2) -h/2];
+        -r/sqrt(2) r/sqrt(2) -h/2];
 end
 
 function y = Pos0Boite()
@@ -174,7 +174,7 @@ function y = Devoir3(wboitei,vballei,tballe)
     
     i = 1; %nb iterations
     result = 0; %is there collision
-    while( i < 200 && result == 0 )
+    while( result == 0 )
         if(qSolBoite(i,1) >= tballe)
             % Calculer la balle avec precision et imposer son Deltat a la
             % boite
@@ -229,7 +229,12 @@ function y = DetectionCollision(posBoite, posBalle, wboitei, temps)
         end
         %0
     else
-        y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps);  %(retourne 0 ou 2)
+        if(norm(posBoite-posBalle) > RayonBalle() + RayonMinBoite())
+            y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps);  %(retourne 0 ou 2)
+        else
+            y = 2;
+        end
+        
     end
     
     %0 = pas de collision
@@ -242,34 +247,34 @@ function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
     %plan de la boite : [i + 8, i + 1, i]. 8 plans + 2.
     posCoinBoiteRotate = RotaterVecteur(wboitei, temps);
     
-    y=0;
     %face du haut
-    planCourant = [posCoinBoiteRotate(1,:); posCoinBoiteRotate(2,:); posCoinBoiteRotate(3,:)];
-    vecteurNormal = cross(planCourant(1,:),planCourant(2,:));
-    vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
-    distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(1,:)+posBoite)));
-    if(distance > RayonBalle)
-        y = -2;
-    end
-    
-    %face du bas
-    planCourant = [posCoinBoiteRotate(9,:); posCoinBoiteRotate(10,:); posCoinBoiteRotate(11,:)];
-    vecteurNormal = cross(planCourant(1,:),planCourant(2,:));
-    vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
-    distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(11,:)+posBoite)));
-    if(distance > RayonBalle)
-        y = -2;
-    end
+%     planCourant = [posCoinBoiteRotate(3,:); posCoinBoiteRotate(2,:); posCoinBoiteRotate(1,:)];
+%     vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
+%     vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
+%     distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(1,:)+posBoite)));
+%     if(distance > RayonBalle)
+%         y = -2;
+%     end
+%     
+%     %face du bas
+%     planCourant = [posCoinBoiteRotate(9,:); posCoinBoiteRotate(10,:); posCoinBoiteRotate(11,:)];
+%     vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
+%     vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
+%     distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(11,:)+posBoite)));
+%     if(distance > RayonBalle)
+%         y = -2;
+%     end
        
     for i = 1:8
        planCourant = [posCoinBoiteRotate(i + 8,:); posCoinBoiteRotate(i + 1,:); posCoinBoiteRotate(i,:)];
        fprintf('%s', mat2str(planCourant));
-       vecteurNormal = cross(planCourant(1,:),planCourant(2,:));
+    vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
        vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
        distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(i + 8,:)+posBoite)));
-       if(distance > RayonBalle)
+       fprintf('%d \n', distance);
+       if(distance > RayonBalle())
            y = -2;
-           break;
+           break;    
        end
     end
         
