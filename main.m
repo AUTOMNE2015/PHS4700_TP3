@@ -173,8 +173,8 @@ function y = Devoir3(wboitei,vballei,tballe)
     qSolBoite(1,:) = [0 0 0 0 posBoite(1) posBoite(2) posBoite(3)];
     
     i = 1; %nb iterations
-    result = 0; %is there collision
-    while( result == 0 )
+    result = [0 [0 0 0]]; %is there collision
+    while( result(1) == 0 )
         if(qSolBoite(i,1) >= tballe)
             % Calculer la balle avec precision et imposer son Deltat a la
             % boite
@@ -191,14 +191,15 @@ function y = Devoir3(wboitei,vballei,tballe)
     
     %qsol(1) est le temps
     % result-1 = 0 si sol, sinon = 1 si collision
-    if(result-1 == 1)
-        %calcul vitesse finaux apres collision
+    if(result(1)-1 == 1)
+        %CalculerCollision(posballe, posboite, normale, wboitei, vboitei, vballei)
+        vcollision = CalculerCollision(qSolBalle(4:7), qSolBoite(4:7), result(2), wboitei, qSolBoite(1:3), qSolBalle(1:3));
     end
     
     %qfinal = [ 0 0 0 0 0 0];
    % qfinal = cell(1,6);
-    vbaf = [0 0 0; 0 0 0];
-    vbof = [0 0 0; 0 0 0];
+    vbaf = vcollision(1);
+    vbof = vcollision(2);
     rba = qSolBalle(:,5:7);
     rbo = qSolBoite(:,5:7);
     ti = qSolBalle(:,1);
@@ -223,17 +224,18 @@ function y = DetectionCollision(posBoite, posBalle, wboitei, temps)
     
     if(norm(posBoite-posBalle) > RayonBalle() + RayonMaxBoite())
         if(posBalle(3) - RayonBalle() <= 0)
-            y = 1;
+            y = [1 [0 0 0]];
         else
-            y = 0;
+            y = [0 [0 0 0]];
         end
         %0
     else
-        if(norm(posBoite-posBalle) > RayonBalle() + RayonMinBoite())
+        % on a besoin du plan de collision
+        %if(norm(posBoite-posBalle) > RayonBalle() + RayonMinBoite())
             y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps);  %(retourne 0 ou 2)
-        else
-            y = 2;
-        end
+        %else
+        %    y = 2;
+        %end
         
     end
     
@@ -248,22 +250,24 @@ function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
     posCoinBoiteRotate = RotaterVecteur(wboitei, temps);
     
     %face du haut
-%     planCourant = [posCoinBoiteRotate(3,:); posCoinBoiteRotate(2,:); posCoinBoiteRotate(1,:)];
-%     vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
-%     vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
-%     distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(1,:)+posBoite)));
-%     if(distance > RayonBalle)
-%         y = -2;
-%     end
-%     
-%     %face du bas
-%     planCourant = [posCoinBoiteRotate(9,:); posCoinBoiteRotate(10,:); posCoinBoiteRotate(11,:)];
-%     vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
-%     vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
-%     distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(11,:)+posBoite)));
-%     if(distance > RayonBalle)
-%         y = -2;
-%     end
+    planCourant = [posCoinBoiteRotate(3,:); posCoinBoiteRotate(2,:); posCoinBoiteRotate(1,:)];
+    vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
+    vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
+    distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(1,:)+posBoite)));
+    if(distance > RayonBalle)
+        y = [0 planCourant];
+        return;
+    end
+    
+    %face du bas
+    planCourant = [posCoinBoiteRotate(9,:); posCoinBoiteRotate(10,:); posCoinBoiteRotate(11,:)];
+    vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
+    vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
+    distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(11,:)+posBoite)));
+    if(distance > RayonBalle)
+        y = [0 planCourant];
+        return;
+    end
        
     for i = 1:8
        planCourant = [posCoinBoiteRotate(i + 8,:); posCoinBoiteRotate(i + 1,:); posCoinBoiteRotate(i,:)];
@@ -271,17 +275,17 @@ function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
     vecteurNormal = cross(planCourant(1,:)-planCourant(2,:),planCourant(1,:)-planCourant(3,:));
        vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
        distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(i + 8,:)+posBoite)));
-       fprintf('%d \n', distance);
+       %fprintf('%d \n', distance);
        if(distance > RayonBalle())
-           y = -2;
-           break;    
+           y = [0 planCourant()];
+        return;    
        end
     end
         
 
     %0 = pas de collision
     %2 - collision balle-boite
-    y = y + 2;
+    y = [2 [0 0 0]];
 end
 
 function y = RotaterVecteur(temps,wboitei)
@@ -300,8 +304,35 @@ function y = RotaterVecteur(temps,wboitei)
 %     scatter3(x2,y2,z2);
 end
 
-function y = CalculerCollision()
-    y = 0;
+function y = CalculerCollision(posballe, posboite, normale, wboitei, vboitei, vballei)
+    % a = bo(A)te, b = (B)alle
+    IBoite = (3*RayonBoite()*RayonBoite() + HauteurBoite()*HauteurBoite())*MasseBoite()/12;
+    IBalle = 2*MasseBalle()*RayonBalle()*RayonBalle()/3;
+    Gboite = dot(normale,  cross(cross(posboite, normale),posboite)/Iboite);
+    Gballe = dot(normale,  cross(cross(posballe, normale),posballe)/IBalle);
+    a = 1/((1/MasseBalle())+(1/MasseBoite())+Gboite+Gballe);
+    vRelAvant = dot(normale, (vboitei - vballei));
+    j = -a*(1+Epsilon())*vRelAvant;
+
+    %vballe avant collision
+    vbaf(1,1:3) = vballei;
+    %wballe avant collision
+    vbaf(1,5:6) = [0 0 0];
+    %vballe apres collision
+    vbaf(2,1:3) = vballei - j*((normale/MasseBalle())+cross((cross(posballe, normale)/Iballe),posballe));
+    %wballe apres collision
+    vbaf(2,4:6) = [0 0 0] - j*(cross(posballe, normale)/IBalle);
+    
+    %vboite avant collision
+    vbof(1,1:3) = vboitei;
+    %wboite avant collision
+    vbof(1,5:6) = wboitei;
+    %vboite apres collision
+    vbof(2,1:3) = vboitei + j*((normale/MasseBoite())+cross((cross(posboite, normale)/IBoite),posboite));
+    %wboite apres collision
+    vbof(2,4:6) = wboitei + j*(cross(posboite, normale)/IBoite);
+    
+    y = [vbaf vbof];
 end
 
 function y = SEDRK4cImprecis (q0 ,t0 ,Deltat ,Err , fonctiong )
