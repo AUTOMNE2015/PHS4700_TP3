@@ -25,21 +25,21 @@ function main
 %    option 1 end
 % 
 %    option 2
-%     sol = Devoir3([0 2.3 0], [6.85, 0.0, 6.85], 0.66);
-%     celldisp(sol)
-%     pointsBalle = sol{4};
-%     
-%     
-%     x1 = pointsBalle(:, 1);
-%     y1 = pointsBalle(:, 2);
-%     z1 = pointsBalle(:, 3);
-%     scatter3(x1,y1,z1);
-% 
-%     pointsBoite = sol{5};
-%     x2 = pointsBoite(:, 1);
-%     y2 = pointsBoite(:, 2);
-%     z2 = pointsBoite(:, 3);
-%     scatter3(x2,y2,z2);
+    sol = Devoir3([0 2.3 0], [6.85, 0.0, 6.85], 0.66);
+    celldisp(sol)
+    pointsBalle = sol{4};
+    
+    
+    x1 = pointsBalle(:, 1);
+    y1 = pointsBalle(:, 2);
+    z1 = pointsBalle(:, 3);
+    scatter3(x1,y1,z1);
+
+    pointsBoite = sol{5};
+    x2 = pointsBoite(:, 1);
+    y2 = pointsBoite(:, 2);
+    z2 = pointsBoite(:, 3);
+    scatter3(x2,y2,z2);
 %    option 2 end
 % 
 %    option 3
@@ -194,7 +194,7 @@ function y = Devoir3(wboitei,vballei,tballe)
     vcollision = [0 [0 0 0]];
     if(result(1)-1 == 1)
         %CalculerCollision(posballe, posboite, normale, wboitei, vboitei, vballei)
-        vcollision = CalculerCollision(qSolBalle(5:7), qSolBoite(5:7), result(2), wboitei, qSolBoite(1:3), qSolBalle(1:3));
+        vcollision = CalculerCollision(qSolBalle(5:7), qSolBoite(5:7), result(2), wboitei, qSolBoite(2:4), qSolBalle(2:4));
     end
     
     %qfinal = [ 0 0 0 0 0 0];
