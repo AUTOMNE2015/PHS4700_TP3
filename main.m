@@ -3,28 +3,28 @@ function main
     fprintf('start\n');
     sol = zeros(8);
     
-    % option 1
-    sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66);
-    celldisp(sol)
-    pointsBalle = sol{4};
-    
-    
-    x1 = pointsBalle(:, 1);
-    y1 = pointsBalle(:, 2);
-    z1 = pointsBalle(:, 3);
-    scatter3(x1,y1,z1);
-
-    pointsBoite = sol{5};
-    x2 = pointsBoite(:, 1);
-    y2 = pointsBoite(:, 2);
-    z2 = pointsBoite(:, 3);
-    scatter3(x2,y2,z2);
+%     option 1
+%     sol = Devoir3([0 0 0], [6.85, 0.0, 6.85], 0.66);
+%     celldisp(sol)
+%     pointsBalle = sol{4};
 %     
-
-   
-   % option 1 end
-
-   % option 2
+%     
+%     x1 = pointsBalle(:, 1);
+%     y1 = pointsBalle(:, 2);
+%     z1 = pointsBalle(:, 3);
+%     scatter3(x1,y1,z1);
+% 
+%     pointsBoite = sol{5};
+%     x2 = pointsBoite(:, 1);
+%     y2 = pointsBoite(:, 2);
+%     z2 = pointsBoite(:, 3);
+%     scatter3(x2,y2,z2);
+%     
+% 
+%    
+%    option 1 end
+% 
+%    option 2
 %     sol = Devoir3([0 2.3 0], [6.85, 0.0, 6.85], 0.66);
 %     celldisp(sol)
 %     pointsBalle = sol{4};
@@ -40,9 +40,9 @@ function main
 %     y2 = pointsBoite(:, 2);
 %     z2 = pointsBoite(:, 3);
 %     scatter3(x2,y2,z2);
-   % option 2 end
-
-   % option 3
+%    option 2 end
+% 
+%    option 3
 %     sol = Devoir3([0 0 0], [28, 0.5, 10], 1.1);
 %     celldisp(sol)
 %     pointsBalle = sol{4};
@@ -59,8 +59,8 @@ function main
 %     z2 = pointsBoite(:, 3);
 %     scatter3(x2,y2,z2);
 %    option 3 end
-   
-   %option 4
+%    
+%    option 4
 %     sol = Devoir3([0 2.3 0], [28, 0.5, 10], 1.1);
 %     celldisp(sol)
 %     pointsBalle = sol{4};
@@ -69,17 +69,17 @@ function main
 %     x1 = pointsBalle(:, 1);
 %     y1 = pointsBalle(:, 2);
 %     z1 = pointsBalle(:, 3);
-%     scatter3(x1,y1,z1);
+%     scatter3(x1,y1,z1, RayonBalle()*200);
 % 
 %     pointsBoite = sol{5};
 %     x2 = pointsBoite(:, 1);
 %     y2 = pointsBoite(:, 2);
 %     z2 = pointsBoite(:, 3);
-%     scatter3(x2,y2,z2);
+%     scatter3(x2,y2,z2, RayonMaxBoite()*200);
 end
 
 function y = dt()
-    y = 0.01;
+    y = 0.001;
 end
 
 
@@ -101,12 +101,12 @@ function y = AireBalle()
 end
 
 function y = AireBoite()
-    y = RayonMinBoite()*RayonMinBoite() + HauteurBoite()*HauteurBoite()
+    y = RayonMinBoite()*RayonMinBoite() + HauteurBoite()*HauteurBoite();
 end
 
 function y = PosRelativeCoinBoite()
-    r = RayonMinBoite()
-    h = HauteurBoite()
+    r = RayonMinBoite();
+    h = HauteurBoite();
     y = [0 r h/2;
         r/sqrt(2) r/sqrt(2) h/2;
         r 0 h/2;
@@ -194,7 +194,7 @@ function y = Devoir3(wboitei,vballei,tballe)
     vcollision = [0 [0 0 0]];
     if(result(1)-1 == 1)
         %CalculerCollision(posballe, posboite, normale, wboitei, vboitei, vballei)
-        vcollision = CalculerCollision(qSolBalle(4:7), qSolBoite(4:7), result(2), wboitei, qSolBoite(1:3), qSolBalle(1:3));
+        vcollision = CalculerCollision(qSolBalle(5:7), qSolBoite(5:7), result(2), wboitei, qSolBoite(1:3), qSolBalle(1:3));
     end
     
     %qfinal = [ 0 0 0 0 0 0];
@@ -224,7 +224,7 @@ function y = DetectionCollision(posBoite, posBalle, wboitei, temps)
     %position boite (posBoite)
     
     if(norm(posBoite-posBalle) > RayonBalle() + RayonMaxBoite())
-        if(posBalle(3) - RayonBalle() <= 0)
+        if(posBalle(3) - RayonBalle() <= 0 || posBoite(3) <= 0) %TEMP TEMP TEMP
             y = [1 [0 0 0]];
         else
             y = [0 [0 0 0]];
@@ -232,12 +232,7 @@ function y = DetectionCollision(posBoite, posBalle, wboitei, temps)
         %0
     else
         % on a besoin du plan de collision
-        if(norm(posBoite-posBalle) > RayonBalle() + RayonMinBoite())
-            y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps);  %(retourne 0 ou 2)
-        else
-            y = [2 posBalle]; % FIXME
-        end
-        
+        y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps);  %(retourne 0 ou 2)
     end
     
     %0 = pas de collision
@@ -256,7 +251,7 @@ function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
     vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
     distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(1,:)+posBoite)));
     if(distance > RayonBalle)
-        y = [0 vecteurNormalUnitaire];% FIXME
+        y = [0 vecteurNormalUnitaire];
         return;
     end
     
@@ -266,7 +261,7 @@ function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
     vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
     distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(11,:)+posBoite)));
     if(distance > RayonBalle)
-        y = [0 vecteurNormalUnitaire];% FIXME
+        y = [0 vecteurNormalUnitaire];
         return;
     end
        
@@ -278,15 +273,28 @@ function y = DetectionCollisionPlansDivision(posBoite, posBalle, wboitei, temps)
        distance = dot(vecteurNormalUnitaire, (posBalle - (posCoinBoiteRotate(i + 8,:)+posBoite)));
        %fprintf('%d \n', distance);
        if(distance > RayonBalle())
-           y = [0 vecteurNormalUnitaire];% FIXME
-        return;    
+           y = [0 vecteurNormalUnitaire];
+           return;    
        end
     end
-        
-
+    
+    point = posCoinBoiteRotate(1);
+    min = norm(posCoinBoiteRotate(1) - posBalle);
+    for i = 2:16
+        %trouver distance entre centre de masse balle et point i de la
+        %boite
+        curr = norm(posCoinBoiteRotate(i) - posBalle);
+        if(curr < min)
+            min = curr;
+            point = posCoinBoiteRotate(i);
+        end 
+    end
+    
+    vecteurNormal = point - posBalle;
+    vecteurNormalUnitaire = vecteurNormal/norm(vecteurNormal);
     %0 = pas de collision
     %2 - collision balle-boite
-    y = [2 [0 0 0]];
+    y = [2 vecteurNormalUnitaire];
 end
 
 function y = RotaterVecteur(temps,wboitei)
@@ -440,4 +448,3 @@ function y = fonctionGboite(q0)
     y = [ax ay az q0(1) q0(2) q0(3)];
     %printf(mat2str(y));
 end
-
